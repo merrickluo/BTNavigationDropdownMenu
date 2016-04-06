@@ -119,6 +119,15 @@ public class BTNavigationDropdownMenu: UIView {
         }
     }
     
+    public var checkMarkEnabled: Bool! {
+        get {
+            return self.configuration.checkMarkEnabled
+        }
+        set {
+            self.configuration.checkMarkEnabled = newValue
+        }
+    }
+    
     // The animation duration of showing/hiding menu. Default is 0.3
     public var animationDuration: NSTimeInterval! {
         get {
@@ -442,6 +451,7 @@ class BTConfiguration {
     var cellTextLabelAlignment: NSTextAlignment!
     var cellSelectionColor: UIColor?
     var checkMarkImage: UIImage!
+    var checkMarkEnabled: Bool!
     var arrowImage: UIImage!
     var menuArrowPosition: BTPosition!
     var expandArrowImage: UIImage!
@@ -479,6 +489,7 @@ class BTConfiguration {
         self.arrowPadding = 15
         self.maskBackgroundColor = UIColor.blackColor()
         self.maskBackgroundOpacity = 0.3
+        self.checkMarkEnabled = true
     }
 }
 
@@ -544,10 +555,10 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = BTTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "Cell", configuration: self.configuration)
         cell.textLabel?.text = self.items[indexPath.section][indexPath.row] as? String
-        cell.checkmarkIcon.hidden = (indexPath == selectedIndexPath) ? false : true
+        cell.checkmarkIcon.hidden = self.configuration.checkMarkEnabled && (indexPath == selectedIndexPath) ? false : true
         
         let showExpansion = self.items[indexPath.section].count > 1 && indexPath.row == 0
-        cell.expansionIcon.hidden = !showExpansion
+        cell.expandArrowIcon.hidden = !showExpansion
         
         if showExpansion {
             cell.expansionTapAction = { [weak self] in
@@ -592,7 +603,7 @@ class BTTableViewCell: UITableViewCell {
     let horizontalMargin: CGFloat = 20
     
     var checkmarkIcon: UIImageView!
-    var expansionIcon: UIImageView!
+    var expandArrowIcon: UIImageView!
     var cellContentFrame: CGRect!
     var configuration: BTConfiguration!
     var expansionTapAction: (() -> Void)? = nil
@@ -638,22 +649,22 @@ class BTTableViewCell: UITableViewCell {
         self.contentView.addSubview(separator)
         
         // expansion icon
-        self.expansionIcon = UIImageView(frame: CGRectMake(cellContentFrame.width - 40, cellContentFrame.origin.y, 40, cellContentFrame.height))
-        self.expansionIcon.hidden = true
-        self.expansionIcon.image = self.configuration.arrowImage
-        self.expansionIcon.contentMode = .Center
-        self.contentView.addSubview(self.expansionIcon)
+        self.expandArrowIcon = UIImageView(frame: CGRectMake(cellContentFrame.width - 40, cellContentFrame.origin.y, 40, cellContentFrame.height))
+        self.expandArrowIcon.hidden = true
+        self.expandArrowIcon.image = self.configuration.expandArrowImage
+        self.expandArrowIcon.contentMode = .Center
+        self.contentView.addSubview(self.expandArrowIcon)
         
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(expansionTap))
         tapRecognizer.numberOfTapsRequired = 1
         tapRecognizer.cancelsTouchesInView = true
-        self.expansionIcon.addGestureRecognizer(tapRecognizer)
-        self.expansionIcon.userInteractionEnabled = true
+        self.expandArrowIcon.addGestureRecognizer(tapRecognizer)
+        self.expandArrowIcon.userInteractionEnabled = true
     }
     
     @objc private func expansionTap(sender: UITapGestureRecognizer) {
         self.expansionTapAction?()
-        self.rotateArrow(self.expansionIcon)
+        self.rotateArrow(self.expandArrowIcon)
     }
     
     func rotateArrow(arrowView: UIImageView) {
