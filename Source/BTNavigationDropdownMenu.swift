@@ -170,7 +170,7 @@ public class BTNavigationDropdownMenu: UIView {
         }
     }
     
-    public var didSelectItemAtIndexHandler: ((indexPath: Int) -> ())?
+    public var didSelectItemAtIndexHandler: ((indexPath: NSIndexPath) -> ())?
     public var isShown: Bool!
 
     private var navigationController: UINavigationController?
@@ -189,11 +189,17 @@ public class BTNavigationDropdownMenu: UIView {
     }
     
     @available(*, deprecated, message="Use init(navigationController:title:items:) instead", renamed="BTNavigationDropdownMenu(navigationController: UINavigationController?, title: String, items: [AnyObject])")
-    public convenience init(title: String, items: [AnyObject]) {
+    public convenience init(title: String, items: [[String]]) {
         self.init(navigationController: nil, title: title, items: items)
     }
     
-    public init(navigationController: UINavigationController?, title: String, items: [AnyObject]) {
+    // use items1 because of oc compability
+    public convenience init(navigationController: UINavigationController?, title: String, items1: [String]) {
+        let items = items1.map { [$0] }
+        self.init(navigationController: navigationController, title: title, items: items)
+    }
+    
+    public init(navigationController: UINavigationController?, title: String, items: [[String]]) {
         
         // Navigation controller
         if let navigationController = navigationController {
@@ -252,9 +258,9 @@ public class BTNavigationDropdownMenu: UIView {
         // Init table view
         self.tableView = BTTableView(frame: CGRectMake(menuWrapperBounds.origin.x, menuWrapperBounds.origin.y + 0.5, menuWrapperBounds.width, menuWrapperBounds.height + 300), items: items, configuration: self.configuration)
         
-        self.tableView.selectRowAtIndexPathHandler = { (indexPath: Int) -> () in
-            self.didSelectItemAtIndexHandler!(indexPath: indexPath)
-            self.setMenuTitle("\(items[indexPath])")
+        self.tableView.selectRowAtIndexPathHandler = { (indexPath: NSIndexPath) -> () in
+            self.didSelectItemAtIndexHandler?(indexPath: indexPath)
+            self.setMenuTitle("\(items[indexPath.section][indexPath.row])")
             self.hideMenu()
             self.layoutSubviews()
         }
@@ -448,23 +454,29 @@ class BTConfiguration {
 class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     
     // Public properties
-    var configuration: BTConfiguration!
-    var selectRowAtIndexPathHandler: ((indexPath: Int) -> ())?
+    var configuration: BTConfiguration
+    var selectRowAtIndexPathHandler: ((indexPath: NSIndexPath) -> ())?
     
     // Private properties
-    private var items: [AnyObject]!
-    private var selectedIndexPath: Int!
+    private var items: [[String]]
+    private var selectedIndexPath: NSIndexPath
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    init(frame: CGRect, items: [AnyObject], configuration: BTConfiguration) {
+    convenience init(frame: CGRect, items: [String], configuration: BTConfiguration) {
+        let items = items.map { [$0] }
+        self.init(frame: frame, items:items, configuration: configuration)
+    }
+    
+    init(frame: CGRect, items: [[String]], configuration: BTConfiguration) {
+        self.items = items
+        self.configuration = configuration
+        self.selectedIndexPath = NSIndexPath(index: 0)
+        
         super.init(frame: frame, style: UITableViewStyle.Plain)
         
-        self.items = items
-        self.selectedIndexPath = 0
-        self.configuration = configuration
         
         // Setup table view
         self.delegate = self
@@ -484,11 +496,11 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     
     // Table view data source
     func numberOfSectionsInTableView(tableView: UITableView) -> Int {
-        return 1
+        return self.items.count
     }
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.items.count
+        return self.items[section].count
     }
     
     func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
@@ -497,16 +509,16 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = BTTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "Cell", configuration: self.configuration)
-        cell.textLabel?.text = self.items[indexPath.row] as? String
-        cell.checkmarkIcon.hidden = (indexPath.row == selectedIndexPath) ? false : true
+        cell.textLabel?.text = self.items[indexPath.section][indexPath.row] as? String
+        cell.checkmarkIcon.hidden = (indexPath == selectedIndexPath) ? false : true
         
         return cell
     }
     
     // Table view delegate
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        selectedIndexPath = indexPath.row
-        self.selectRowAtIndexPathHandler!(indexPath: indexPath.row)
+        selectedIndexPath = indexPath
+        self.selectRowAtIndexPathHandler!(indexPath: indexPath)
         self.reloadData()
         let cell = tableView.cellForRowAtIndexPath(indexPath) as? BTTableViewCell
         cell?.contentView.backgroundColor = self.configuration.cellSelectionColor
