@@ -77,6 +77,15 @@ public class BTNavigationDropdownMenu: UIView {
             self.configuration.cellTextLabelColor = value
         }
     }
+   
+    public var cellTextLabelSelectedColor: UIColor! {
+        get {
+            return self.configuration.cellTextLabelSelectedColor
+        }
+        set(value) {
+            self.configuration.cellTextLabelSelectedColor = value
+        }
+    }
     
     // The font of the text inside cell. Default is HelveticaNeue-Bold, size 19
     public var cellTextLabelFont: UIFont! {
@@ -447,6 +456,7 @@ class BTConfiguration {
     var cellBackgroundColor: UIColor?
     var cellSeparatorColor: UIColor?
     var cellTextLabelColor: UIColor?
+    var cellTextLabelSelectedColor: UIColor?
     var cellTextLabelFont: UIFont!
     var cellTextLabelAlignment: NSTextAlignment!
     var cellSelectionColor: UIColor?
@@ -478,6 +488,7 @@ class BTConfiguration {
         self.cellBackgroundColor = UIColor.whiteColor()
         self.cellSeparatorColor = UIColor.darkGrayColor()
         self.cellTextLabelColor = UIColor.darkGrayColor()
+        self.cellTextLabelSelectedColor = UIColor.blackColor()
         self.cellTextLabelFont = UIFont(name: "HelveticaNeue-Bold", size: 17)
         self.cellTextLabelAlignment = NSTextAlignment.Left
         self.cellSelectionColor = UIColor.lightGrayColor()
@@ -555,8 +566,8 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = BTTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "Cell", configuration: self.configuration)
         cell.textLabel?.text = self.items[indexPath.section][indexPath.row] as? String
+        cell.textLabel?.textColor = selectedIndexPath == indexPath ? self.configuration.cellTextLabelSelectedColor : self.configuration.cellTextLabelColor
         cell.checkmarkIcon.hidden = self.configuration.checkMarkEnabled && (indexPath == selectedIndexPath) ? false : true
-        
         let showExpansion = self.items[indexPath.section].count > 1 && indexPath.row == 0
         cell.expandArrowIcon.hidden = !showExpansion
         
