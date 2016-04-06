@@ -215,6 +215,18 @@ public class BTNavigationDropdownMenu: UIView {
         }
     }
     
+    public var title: String {
+        didSet {
+            setMenuTitle(title)
+        }
+    }
+    
+    public var items: [[String]] {
+        didSet {
+            self.tableView.items = items
+        }
+    }
+    
     public var didSelectItemAtIndexHandler: ((indexPath: NSIndexPath) -> ())?
     public var isShown: Bool!
 
@@ -226,7 +238,6 @@ public class BTNavigationDropdownMenu: UIView {
     private var menuArrow: UIImageView!
     private var backgroundView: UIView!
     private var tableView: BTTableView!
-    private var items: [[String]]!
     private var menuWrapper: UIView!
     
     required public init?(coder aDecoder: NSCoder) {
@@ -258,6 +269,10 @@ public class BTNavigationDropdownMenu: UIView {
         
         // Get titleSize
         let titleSize = (title as NSString).sizeWithAttributes([NSFontAttributeName:self.configuration.cellTextLabelFont])
+       
+        self.title = title
+        self.isShown = false
+        self.items = items
         
         // Set frame
         let frame = CGRectMake(0, 0, titleSize.width + (self.configuration.arrowPadding + self.configuration.arrowImage.size.width)*2, self.navigationController!.navigationBar.frame.height)
@@ -266,8 +281,6 @@ public class BTNavigationDropdownMenu: UIView {
         
         self.navigationController?.view.addObserver(self, forKeyPath: "frame", options: .New, context: nil)
         
-        self.isShown = false
-        self.items = items
         
         // Init properties
         self.configuration = configuration
@@ -308,7 +321,6 @@ public class BTNavigationDropdownMenu: UIView {
         
         self.tableView.selectRowAtIndexPathHandler = { (indexPath: NSIndexPath) -> () in
             self.didSelectItemAtIndexHandler?(indexPath: indexPath)
-            self.setMenuTitle("\(items[indexPath.section][indexPath.row])")
             self.hideMenu()
             self.layoutSubviews()
         }
@@ -449,6 +461,7 @@ public class BTNavigationDropdownMenu: UIView {
     
     func setMenuTitle(title: String) {
         self.menuTitle.text = title
+        self.layoutSubviews()
     }
     
     func menuButtonTapped(sender: UIButton) {
@@ -520,8 +533,13 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     var configuration: BTConfiguration
     var selectRowAtIndexPathHandler: ((indexPath: NSIndexPath) -> ())?
     
+    var items: [[String]] {
+        didSet {
+            reloadData()
+        }
+    }
+    
     // Private properties
-    private var items: [[String]]
     private var selectedIndexPath: NSIndexPath
     private var sectionExpansion: [Bool]
     
