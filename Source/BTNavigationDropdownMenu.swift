@@ -460,6 +460,7 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     // Private properties
     private var items: [[String]]
     private var selectedIndexPath: NSIndexPath
+    private var sectionExpansion: [Bool]
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -474,9 +475,9 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
         self.items = items
         self.configuration = configuration
         self.selectedIndexPath = NSIndexPath(index: 0)
+        self.sectionExpansion = self.items.map { _ in false }
         
         super.init(frame: frame, style: UITableViewStyle.Plain)
-        
         
         // Setup table view
         self.delegate = self
@@ -488,7 +489,8 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     }
     
     override func hitTest(point: CGPoint, withEvent event: UIEvent?) -> UIView? {
-        if let hitView = super.hitTest(point, withEvent: event) where hitView.isKindOfClass(BTTableCellContentView.self) {
+        if let hitView = super.hitTest(point, withEvent: event)
+            where hitView.isKindOfClass(BTTableCellContentView.self) || hitView.isKindOfClass(UIImageView.self) {
             return hitView
         }
         return nil;
@@ -500,7 +502,7 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.items[section].count
+        return sectionExpansion[section] ? self.items[section].count : 1
     }
     
     func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
@@ -511,6 +513,25 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
         let cell = BTTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "Cell", configuration: self.configuration)
         cell.textLabel?.text = self.items[indexPath.section][indexPath.row] as? String
         cell.checkmarkIcon.hidden = (indexPath == selectedIndexPath) ? false : true
+        
+        let showExpansion = self.items[indexPath.section].count > 1 && indexPath.row == 0
+        cell.expansionIcon.hidden = !showExpansion
+        
+        if showExpansion {
+            cell.expansionTapAction = { [weak self] in
+                if let selfie = self {
+                    let expand = !selfie.sectionExpansion[indexPath.section]
+                    selfie.sectionExpansion[indexPath.section] = expand
+                    let count = selfie.items[indexPath.section].count
+                    let indexPaths = Array(1..<count).map { NSIndexPath(forRow: $0, inSection: indexPath.section) }
+                    if expand {
+                        selfie.insertRowsAtIndexPaths(indexPaths, withRowAnimation: .Automatic)
+                    } else {
+                        selfie.deleteRowsAtIndexPaths(indexPaths, withRowAnimation: .Automatic)
+                    }
+                }
+            }
+        }
         
         return cell
     }
@@ -529,6 +550,8 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
         cell?.checkmarkIcon.hidden = true
         cell?.contentView.backgroundColor = self.configuration.cellBackgroundColor
     }
+    
+    
 }
 
 // MARK: Table view cell
@@ -537,8 +560,10 @@ class BTTableViewCell: UITableViewCell {
     let horizontalMargin: CGFloat = 20
     
     var checkmarkIcon: UIImageView!
+    var expansionIcon: UIImageView!
     var cellContentFrame: CGRect!
     var configuration: BTConfiguration!
+    var expansionTapAction: (() -> Void)? = nil
     
     init(style: UITableViewCellStyle, reuseIdentifier: String?, configuration: BTConfiguration) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -572,13 +597,37 @@ class BTTableViewCell: UITableViewCell {
         self.checkmarkIcon.image = self.configuration.checkMarkImage
         self.checkmarkIcon.contentMode = UIViewContentMode.ScaleAspectFill
         self.contentView.addSubview(self.checkmarkIcon)
-        
+       
         // Separator for cell
         let separator = BTTableCellContentView(frame: cellContentFrame)
         if let cellSeparatorColor = self.configuration.cellSeparatorColor {
             separator.separatorColor = cellSeparatorColor
         }
         self.contentView.addSubview(separator)
+        
+        // expansion icon
+        self.expansionIcon = UIImageView(frame: CGRectMake(cellContentFrame.width - 40, cellContentFrame.origin.y, 40, cellContentFrame.height))
+        self.expansionIcon.hidden = true
+        self.expansionIcon.image = self.configuration.arrowImage
+        self.expansionIcon.contentMode = .Center
+        self.contentView.addSubview(self.expansionIcon)
+        
+        let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(expansionTap))
+        tapRecognizer.numberOfTapsRequired = 1
+        tapRecognizer.cancelsTouchesInView = true
+        self.expansionIcon.addGestureRecognizer(tapRecognizer)
+        self.expansionIcon.userInteractionEnabled = true
+    }
+    
+    @objc private func expansionTap(sender: UITapGestureRecognizer) {
+        self.expansionTapAction?()
+        self.rotateArrow(self.expansionIcon)
+    }
+    
+    func rotateArrow(arrowView: UIImageView) {
+        UIView.animateWithDuration(0.2, animations: {[weak self] () -> () in
+            arrowView.transform = CGAffineTransformRotate(arrowView.transform, 180 * CGFloat(M_PI/180))
+            })
     }
     
     required init?(coder aDecoder: NSCoder) {
