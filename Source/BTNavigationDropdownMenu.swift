@@ -206,6 +206,15 @@ public class BTNavigationDropdownMenu: UIView {
         }
     }
     
+    public var defaultExpandSections: [Int]? {
+        get {
+            return self.configuration.defaultExpandSections
+        }
+        set {
+            self.configuration.defaultExpandSections = newValue
+        }
+    }
+    
     public var didSelectItemAtIndexHandler: ((indexPath: NSIndexPath) -> ())?
     public var isShown: Bool!
 
@@ -217,7 +226,7 @@ public class BTNavigationDropdownMenu: UIView {
     private var menuArrow: UIImageView!
     private var backgroundView: UIView!
     private var tableView: BTTableView!
-    private var items: [AnyObject]!
+    private var items: [[String]]!
     private var menuWrapper: UIView!
     
     required public init?(coder aDecoder: NSCoder) {
@@ -529,7 +538,7 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
         self.items = items
         self.configuration = configuration
         self.selectedIndexPath = NSIndexPath(index: 0)
-        self.sectionExpansion = self.items.map { _ in false }
+        self.sectionExpansion = self.items.indices.map { configuration.defaultExpandSections?.contains($0) ?? false }
         
         super.init(frame: frame, style: UITableViewStyle.Plain)
         
@@ -604,8 +613,6 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
         cell?.checkmarkIcon.hidden = true
         cell?.contentView.backgroundColor = self.configuration.cellBackgroundColor
     }
-    
-    
 }
 
 // MARK: Table view cell
