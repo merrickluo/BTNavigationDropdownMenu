@@ -140,6 +140,24 @@ public class BTNavigationDropdownMenu: UIView {
         }
     }
     
+    public var expandArrowImage: UIImage! {
+        get {
+            return self.configuration.expandArrowImage
+        }
+        set {
+            self.configuration.expandArrowImage = newValue
+        }
+    }
+    
+    public var menuArrowPosition: BTPosition! {
+        get {
+            return self.configuration.menuArrowPosition
+        }
+        set {
+            self.configuration.menuArrowPosition = newValue
+        }
+    }
+    
     // The padding between navigation title and arrow
     public var arrowPadding: CGFloat! {
         get {
@@ -293,7 +311,12 @@ public class BTNavigationDropdownMenu: UIView {
         self.menuTitle.sizeToFit()
         self.menuTitle.center = CGPointMake(self.frame.size.width/2, self.frame.size.height/2)
         self.menuArrow.sizeToFit()
-        self.menuArrow.center = CGPointMake(CGRectGetMaxX(self.menuTitle.frame) + self.configuration.arrowPadding, self.frame.size.height/2)
+        switch self.menuArrowPosition! {
+        case .Bottom:
+            self.menuArrow.center = CGPointMake(self.menuTitle.frame.origin.x + self.menuTitle.frame.width / 2, self.frame.size.height - self.menuArrow.frame.height)
+        default:
+            self.menuArrow.center = CGPointMake(CGRectGetMaxX(self.menuTitle.frame) + self.configuration.arrowPadding, self.frame.size.height/2)
+        }
     }
     
     public func show() {
@@ -403,6 +426,11 @@ public class BTNavigationDropdownMenu: UIView {
     }
 }
 
+public enum BTPosition {
+    case Right
+    case Bottom
+}
+
 // MARK: BTConfiguration
 class BTConfiguration {
     var menuTitleColor: UIColor?
@@ -415,6 +443,8 @@ class BTConfiguration {
     var cellSelectionColor: UIColor?
     var checkMarkImage: UIImage!
     var arrowImage: UIImage!
+    var menuArrowPosition: BTPosition!
+    var expandArrowImage: UIImage!
     var arrowPadding: CGFloat!
     var animationDuration: NSTimeInterval!
     var maskBackgroundColor: UIColor!
@@ -444,6 +474,8 @@ class BTConfiguration {
         self.checkMarkImage = UIImage(contentsOfFile: checkMarkImagePath!)
         self.animationDuration = 0.5
         self.arrowImage = UIImage(contentsOfFile: arrowImagePath!)
+        self.expandArrowImage = self.arrowImage
+        self.menuArrowPosition = .Right
         self.arrowPadding = 15
         self.maskBackgroundColor = UIColor.blackColor()
         self.maskBackgroundOpacity = 0.3
