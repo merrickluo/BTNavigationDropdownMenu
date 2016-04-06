@@ -235,8 +235,11 @@ public class BTNavigationDropdownMenu: UIView {
         self.init(navigationController: navigationController, title: title, items: items)
     }
     
-    public init(navigationController: UINavigationController?, title: String, items: [[String]]) {
-        
+    public convenience init(navigationController: UINavigationController?, title: String, items: [[String]]) {
+        self.init(navigationController: navigationController, title: title, items: items, configuration: BTConfiguration())
+    }
+    
+    public init(navigationController: UINavigationController?, title: String, items: [[String]], configuration: BTConfiguration) {
         // Navigation controller
         if let navigationController = navigationController {
             self.navigationController = navigationController
@@ -258,7 +261,7 @@ public class BTNavigationDropdownMenu: UIView {
         self.items = items
         
         // Init properties
-        self.setupDefaultConfiguration()
+        self.configuration = configuration
 
         // Init button as navigation title
         self.menuButton = UIButton(frame: frame)
@@ -450,31 +453,28 @@ public enum BTPosition {
 }
 
 // MARK: BTConfiguration
-class BTConfiguration {
-    var menuTitleColor: UIColor?
-    var cellHeight: CGFloat!
-    var cellBackgroundColor: UIColor?
-    var cellSeparatorColor: UIColor?
-    var cellTextLabelColor: UIColor?
-    var cellTextLabelSelectedColor: UIColor?
-    var cellTextLabelFont: UIFont!
-    var cellTextLabelAlignment: NSTextAlignment!
-    var cellSelectionColor: UIColor?
-    var checkMarkImage: UIImage!
-    var checkMarkEnabled: Bool!
-    var arrowImage: UIImage!
-    var menuArrowPosition: BTPosition!
-    var expandArrowImage: UIImage!
-    var arrowPadding: CGFloat!
-    var animationDuration: NSTimeInterval!
-    var maskBackgroundColor: UIColor!
-    var maskBackgroundOpacity: CGFloat!
+public class BTConfiguration {
+    public var menuTitleColor: UIColor?
+    public var cellHeight: CGFloat!
+    public var cellBackgroundColor: UIColor?
+    public var cellSeparatorColor: UIColor?
+    public var cellTextLabelColor: UIColor?
+    public var cellTextLabelSelectedColor: UIColor?
+    public var cellTextLabelFont: UIFont!
+    public var cellTextLabelAlignment: NSTextAlignment!
+    public var cellSelectionColor: UIColor?
+    public var checkMarkImage: UIImage!
+    public var checkMarkEnabled: Bool!
+    public var arrowImage: UIImage!
+    public var menuArrowPosition: BTPosition!
+    public var expandArrowImage: UIImage!
+    public var arrowPadding: CGFloat!
+    public var animationDuration: NSTimeInterval!
+    public var maskBackgroundColor: UIColor!
+    public var maskBackgroundOpacity: CGFloat!
+    public var defaultExpandSections: [Int]?
     
-    init() {
-        self.defaultValue()
-    }
-    
-    func defaultValue() {
+    public init() {
         // Path for image
         let bundle = NSBundle(forClass: BTConfiguration.self)
         let url = bundle.URLForResource("BTNavigationDropdownMenu", withExtension: "bundle")
