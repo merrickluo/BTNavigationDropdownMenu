@@ -391,6 +391,7 @@ public class BTNavigationDropdownMenu: UIView {
         self.cellTextLabelColor = self.navigationController?.navigationBar.titleTextAttributes?[NSForegroundColorAttributeName] as? UIColor
     }
     
+    
     func showMenu() {
         self.menuWrapper.frame.origin.y = self.navigationController!.navigationBar.frame.maxY
         
@@ -413,7 +414,7 @@ public class BTNavigationDropdownMenu: UIView {
         self.backgroundView.alpha = 0
         
         // Animation
-        self.tableView.frame.origin.y = -CGFloat(self.items.count) * self.configuration.cellHeight - 300
+        self.tableView.frame.origin.y = -self.tableView.contentSize.height - 300
         
         // Reload data to dismiss highlight color of selected cell
         self.tableView.reloadData()
@@ -455,7 +456,7 @@ public class BTNavigationDropdownMenu: UIView {
         
         // Animation
         UIView.animateWithDuration(self.configuration.animationDuration, delay: 0, options: UIViewAnimationOptions.TransitionNone, animations: {
-            self.tableView.frame.origin.y = -CGFloat(self.items.count) * self.configuration.cellHeight - 300
+            self.tableView.frame.origin.y = -self.tableView.contentSize.height - 300
             self.backgroundView.alpha = 0
             }, completion: { _ in
                 self.menuWrapper.hidden = true
@@ -607,6 +608,7 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
         return self.configuration.cellHeight
     }
+    
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = BTTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "Cell", configuration: self.configuration)
