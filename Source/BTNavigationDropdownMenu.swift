@@ -535,6 +535,9 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     
     var items: [[String]] {
         didSet {
+            while items.count > sectionExpansion.count {
+                sectionExpansion.append(false)
+            }
             reloadData()
         }
     }
@@ -555,7 +558,7 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     init(frame: CGRect, items: [[String]], configuration: BTConfiguration) {
         self.items = items
         self.configuration = configuration
-        self.selectedIndexPath = NSIndexPath(index: 0)
+        self.selectedIndexPath = NSIndexPath(forRow: 0, inSection: 0)
         self.sectionExpansion = self.items.indices.map { configuration.defaultExpandSections?.contains($0) ?? false }
         
         super.init(frame: frame, style: UITableViewStyle.Plain)
