@@ -227,6 +227,15 @@ public class BTNavigationDropdownMenu: UIView {
         }
     }
     
+    public var enabled: Bool = true {
+        didSet {
+            if self.isShown ?? true {
+                hideMenu()
+            }
+            layoutSubviews()
+        }
+    }
+    
     public var didSelectItemAtIndexHandler: ((indexPath: NSIndexPath) -> ())?
     public var isShown: Bool!
 
@@ -293,7 +302,7 @@ public class BTNavigationDropdownMenu: UIView {
         self.menuTitle = UILabel(frame: frame)
         self.menuTitle.text = title
         self.menuTitle.textColor = self.menuTitleColor
-        self.menuTitle.font = self.configuration.cellTextLabelFont
+        self.menuTitle.font = self.configuration.menuTitleFont
         self.menuTitle.textAlignment = self.configuration.cellTextLabelAlignment
         self.menuButton.addSubview(self.menuTitle)
         
@@ -352,6 +361,8 @@ public class BTNavigationDropdownMenu: UIView {
     override public func layoutSubviews() {
         self.menuTitle.sizeToFit()
         self.menuTitle.center = CGPointMake(self.frame.size.width/2, self.frame.size.height/2)
+        
+        self.menuArrow.hidden = !self.enabled
         self.menuArrow.sizeToFit()
         switch self.menuArrowPosition! {
         case .Bottom:
@@ -465,7 +476,9 @@ public class BTNavigationDropdownMenu: UIView {
     }
     
     func menuButtonTapped(sender: UIButton) {
-        self.isShown == true ? hideMenu() : showMenu()
+        if self.enabled {
+            self.isShown == true ? hideMenu() : showMenu()
+        }
     }
 }
 
@@ -476,6 +489,7 @@ public enum BTPosition {
 
 // MARK: BTConfiguration
 public class BTConfiguration {
+    public var menuTitleFont: UIFont!
     public var menuTitleColor: UIColor?
     public var cellHeight: CGFloat!
     public var cellBackgroundColor: UIColor?
@@ -506,6 +520,7 @@ public class BTConfiguration {
 
         // Default values
         self.menuTitleColor = UIColor.darkGrayColor()
+        self.menuTitleFont = UIFont(name: "HelveticaNeue-Bold", size: 17)
         self.cellHeight = 50
         self.cellBackgroundColor = UIColor.whiteColor()
         self.cellSeparatorColor = UIColor.darkGrayColor()
