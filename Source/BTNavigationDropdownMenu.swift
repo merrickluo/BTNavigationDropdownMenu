@@ -227,6 +227,15 @@ public class BTNavigationDropdownMenu: UIView {
         }
     }
     
+    public var enabled: Bool = true {
+        didSet {
+            if self.isShown ?? true {
+                hideMenu()
+            }
+            layoutSubviews()
+        }
+    }
+    
     public var didSelectItemAtIndexHandler: ((indexPath: NSIndexPath) -> ())?
     public var isShown: Bool!
 
@@ -293,7 +302,7 @@ public class BTNavigationDropdownMenu: UIView {
         self.menuTitle = UILabel(frame: frame)
         self.menuTitle.text = title
         self.menuTitle.textColor = self.menuTitleColor
-        self.menuTitle.font = self.configuration.cellTextLabelFont
+        self.menuTitle.font = self.configuration.menuTitleFont
         self.menuTitle.textAlignment = self.configuration.cellTextLabelAlignment
         self.menuButton.addSubview(self.menuTitle)
         
@@ -352,6 +361,8 @@ public class BTNavigationDropdownMenu: UIView {
     override public func layoutSubviews() {
         self.menuTitle.sizeToFit()
         self.menuTitle.center = CGPointMake(self.frame.size.width/2, self.frame.size.height/2)
+        
+        self.menuArrow.hidden = !self.enabled
         self.menuArrow.sizeToFit()
         switch self.menuArrowPosition! {
         case .Bottom:
@@ -380,6 +391,7 @@ public class BTNavigationDropdownMenu: UIView {
         self.cellTextLabelColor = self.navigationController?.navigationBar.titleTextAttributes?[NSForegroundColorAttributeName] as? UIColor
     }
     
+    
     func showMenu() {
         self.menuWrapper.frame.origin.y = self.navigationController!.navigationBar.frame.maxY
         
@@ -402,7 +414,7 @@ public class BTNavigationDropdownMenu: UIView {
         self.backgroundView.alpha = 0
         
         // Animation
-        self.tableView.frame.origin.y = -CGFloat(self.items.count) * self.configuration.cellHeight - 300
+        self.tableView.frame.origin.y = -self.tableView.contentSize.height - 300
         
         // Reload data to dismiss highlight color of selected cell
         self.tableView.reloadData()
@@ -444,7 +456,7 @@ public class BTNavigationDropdownMenu: UIView {
         
         // Animation
         UIView.animateWithDuration(self.configuration.animationDuration, delay: 0, options: UIViewAnimationOptions.TransitionNone, animations: {
-            self.tableView.frame.origin.y = -CGFloat(self.items.count) * self.configuration.cellHeight - 300
+            self.tableView.frame.origin.y = -self.tableView.contentSize.height - 300
             self.backgroundView.alpha = 0
             }, completion: { _ in
                 self.menuWrapper.hidden = true
@@ -465,7 +477,9 @@ public class BTNavigationDropdownMenu: UIView {
     }
     
     func menuButtonTapped(sender: UIButton) {
-        self.isShown == true ? hideMenu() : showMenu()
+        if self.enabled {
+            self.isShown == true ? hideMenu() : showMenu()
+        }
     }
 }
 
@@ -476,6 +490,7 @@ public enum BTPosition {
 
 // MARK: BTConfiguration
 public class BTConfiguration {
+    public var menuTitleFont: UIFont!
     public var menuTitleColor: UIColor?
     public var cellHeight: CGFloat!
     public var cellBackgroundColor: UIColor?
@@ -506,6 +521,7 @@ public class BTConfiguration {
 
         // Default values
         self.menuTitleColor = UIColor.darkGrayColor()
+        self.menuTitleFont = UIFont(name: "HelveticaNeue-Bold", size: 17)
         self.cellHeight = 50
         self.cellBackgroundColor = UIColor.whiteColor()
         self.cellSeparatorColor = UIColor.darkGrayColor()
@@ -535,6 +551,9 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     
     var items: [[String]] {
         didSet {
+            while items.count > sectionExpansion.count {
+                sectionExpansion.append(false)
+            }
             reloadData()
         }
     }
@@ -555,7 +574,7 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     init(frame: CGRect, items: [[String]], configuration: BTConfiguration) {
         self.items = items
         self.configuration = configuration
-        self.selectedIndexPath = NSIndexPath(index: 0)
+        self.selectedIndexPath = NSIndexPath(forRow: 0, inSection: 0)
         self.sectionExpansion = self.items.indices.map { configuration.defaultExpandSections?.contains($0) ?? false }
         
         super.init(frame: frame, style: UITableViewStyle.Plain)
@@ -589,6 +608,7 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
         return self.configuration.cellHeight
     }
+    
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = BTTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "Cell", configuration: self.configuration)
