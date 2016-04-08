@@ -274,6 +274,11 @@ public class BTNavigationDropdownMenu: UIView {
         self.init(navigationController: navigationController, title: title, items: items)
     }
     
+    public convenience init(navigationController: UINavigationController?, title: String, items1: [String], configuration: BTConfiguration) {
+        let items = items1.map { [$0] }
+        self.init(navigationController: navigationController, title: title, items: items, configuration: configuration)
+    }
+    
     public convenience init(navigationController: UINavigationController?, title: String, items: [[String]]) {
         self.init(navigationController: navigationController, title: title, items: items, configuration: BTConfiguration())
     }
@@ -336,7 +341,8 @@ public class BTNavigationDropdownMenu: UIView {
         self.backgroundView.addGestureRecognizer(backgroundTapRecognizer)
         
         // Init table view
-        self.tableView = BTTableView(frame: CGRectMake(menuWrapperBounds.origin.x, menuWrapperBounds.origin.y + 0.5, menuWrapperBounds.width, menuWrapperBounds.height + 300), items: items, configuration: self.configuration)
+        // 300 for header and 64 for nav and status bar height
+        self.tableView = BTTableView(frame: CGRectMake(menuWrapperBounds.origin.x, menuWrapperBounds.origin.y + 0.5, menuWrapperBounds.width, menuWrapperBounds.height + 300 - 64), items: items, configuration: self.configuration)
         
         self.tableView.selectRowAtIndexPathHandler = { (indexPath: NSIndexPath) -> () in
             self.didSelectItemAtIndexHandler?(indexPath: indexPath)
