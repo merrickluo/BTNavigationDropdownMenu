@@ -39,6 +39,16 @@ public class BTNavigationDropdownMenu: UIView {
         }
     }
     
+    // The font of menu title.
+    public var menuTitleFont: UIFont! {
+        get {
+            return self.configuration.menuTitleFont
+        }
+        set(value) {
+            self.configuration.menuTitleFont = value
+        }
+    }
+    
     // The height of the cell. Default is 50
     public var cellHeight: CGFloat! {
         get {
