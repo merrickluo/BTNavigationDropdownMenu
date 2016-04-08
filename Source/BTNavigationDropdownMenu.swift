@@ -46,6 +46,7 @@ public class BTNavigationDropdownMenu: UIView {
         }
         set(value) {
             self.configuration.menuTitleFont = value
+            self.menuTitle.font = value
         }
     }
     
@@ -104,7 +105,6 @@ public class BTNavigationDropdownMenu: UIView {
         }
         set(value) {
             self.configuration.cellTextLabelFont = value
-            self.menuTitle.font = self.configuration.cellTextLabelFont
         }
     }
     
@@ -635,7 +635,6 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
         return self.configuration.cellHeight
     }
-    
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = BTTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "Cell", configuration: self.configuration)
