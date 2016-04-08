@@ -527,6 +527,9 @@ public class BTConfiguration {
     public var maskBackgroundOpacity: CGFloat!
     public var defaultExpandSections: [Int]?
     
+    public weak var customTableViewDelegate: UITableViewDelegate?
+    public weak var customTableViewDatasource: UITableViewDataSource?
+    
     public init() {
         // Path for image
         let bundle = NSBundle(forClass: BTConfiguration.self)
@@ -596,8 +599,16 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
         super.init(frame: frame, style: UITableViewStyle.Plain)
         
         // Setup table view
-        self.delegate = self
-        self.dataSource = self
+        if let delegate = self.configuration.customTableViewDelegate {
+            self.delegate = self.configuration.customTableViewDelegate
+        } else {
+            self.delegate = self
+        }
+        if let dataSource = self.configuration.customTableViewDatasource {
+            self.dataSource = dataSource
+        } else {
+            self.dataSource = self
+        }
         self.backgroundColor = UIColor.clearColor()
         self.separatorStyle = UITableViewCellSeparatorStyle.None
         self.autoresizingMask = UIViewAutoresizing.FlexibleWidth
