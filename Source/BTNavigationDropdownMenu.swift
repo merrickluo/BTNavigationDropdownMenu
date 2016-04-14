@@ -511,10 +511,16 @@ public class BTConfiguration {
     public var cellHeight: CGFloat!
     public var cellBackgroundColor: UIColor?
     public var cellSeparatorColor: UIColor?
+   
+    public var cellTitleLabelColor: UIColor?
+    public var cellTitleLabelFont: UIFont!
+    public var cellTitleLabelAlignment: NSTextAlignment!
+    
     public var cellTextLabelColor: UIColor?
     public var cellTextLabelSelectedColor: UIColor?
     public var cellTextLabelFont: UIFont!
     public var cellTextLabelAlignment: NSTextAlignment!
+    
     public var cellSelectionColor: UIColor?
     public var checkMarkImage: UIImage!
     public var checkMarkEnabled: Bool!
@@ -544,10 +550,16 @@ public class BTConfiguration {
         self.cellHeight = 50
         self.cellBackgroundColor = UIColor.whiteColor()
         self.cellSeparatorColor = UIColor.darkGrayColor()
+        
         self.cellTextLabelColor = UIColor.darkGrayColor()
         self.cellTextLabelSelectedColor = UIColor.blackColor()
         self.cellTextLabelFont = UIFont(name: "HelveticaNeue-Bold", size: 17)
         self.cellTextLabelAlignment = NSTextAlignment.Left
+        
+        self.cellTitleLabelColor = UIColor.darkGrayColor()
+        self.cellTitleLabelFont = UIFont(name: "HelveticaNeue-Bold", size: 17)
+        self.cellTitleLabelAlignment = NSTextAlignment.Left
+        
         self.cellSelectionColor = UIColor.lightGrayColor()
         self.checkMarkImage = UIImage(contentsOfFile: checkMarkImagePath!)
         self.animationDuration = 0.5
@@ -637,9 +649,15 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = BTTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "Cell", configuration: self.configuration)
+        var cell: BTTableViewCell
+        if indexPath.row == 0 {
+            cell = BTTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "Header", cellType: .Header, configuration: self.configuration)
+        } else {
+            cell = BTTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "Item", cellType: .Item, configuration: self.configuration)
+        }
         cell.textLabel?.text = self.items[indexPath.section][indexPath.row] as? String
-        cell.textLabel?.textColor = selectedIndexPath == indexPath ? self.configuration.cellTextLabelSelectedColor : self.configuration.cellTextLabelColor
+        cell.selected = selectedIndexPath == indexPath
+        
         cell.checkmarkIcon.hidden = self.configuration.checkMarkEnabled && (indexPath == selectedIndexPath) ? false : true
         let showExpansion = self.items[indexPath.section].count > 1 && indexPath.row == 0
         cell.expandArrowIcon.hidden = !showExpansion
@@ -679,6 +697,11 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     }
 }
 
+enum CellType {
+    case Header
+    case Item
+}
+
 // MARK: Table view cell
 class BTTableViewCell: UITableViewCell {
     let checkmarkIconWidth: CGFloat = 50
@@ -689,8 +712,19 @@ class BTTableViewCell: UITableViewCell {
     var cellContentFrame: CGRect!
     var configuration: BTConfiguration!
     var expansionTapAction: (() -> Void)? = nil
+    var type: CellType
     
-    init(style: UITableViewCellStyle, reuseIdentifier: String?, configuration: BTConfiguration) {
+    override var selected: Bool {
+        didSet {
+            self.textLabel!.textColor = selected ?
+                self.configuration.cellTextLabelSelectedColor :
+                type == .Header ? self.configuration.cellTitleLabelColor : self.configuration.cellTextLabelColor
+        }
+    }
+    
+    init(style: UITableViewCellStyle, reuseIdentifier: String?, cellType: CellType, configuration: BTConfiguration) {
+        type = cellType
+        
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         self.configuration = configuration
@@ -699,9 +733,17 @@ class BTTableViewCell: UITableViewCell {
         cellContentFrame = CGRectMake(0, 0, (UIApplication.sharedApplication().keyWindow?.frame.width)!, self.configuration.cellHeight)
         self.contentView.backgroundColor = self.configuration.cellBackgroundColor
         self.selectionStyle = UITableViewCellSelectionStyle.None
-        self.textLabel!.textColor = self.configuration.cellTextLabelColor
-        self.textLabel!.font = self.configuration.cellTextLabelFont
-        self.textLabel!.textAlignment = self.configuration.cellTextLabelAlignment
+        
+        if cellType == .Header {
+            self.textLabel!.textColor = self.configuration.cellTitleLabelColor
+            self.textLabel!.font = self.configuration.cellTitleLabelFont
+            self.textLabel!.textAlignment = self.configuration.cellTitleLabelAlignment
+        } else {
+            self.textLabel!.textColor = self.configuration.cellTextLabelColor
+            self.textLabel!.font = self.configuration.cellTextLabelFont
+            self.textLabel!.textAlignment = self.configuration.cellTextLabelAlignment
+        }
+        
         if self.textLabel!.textAlignment == .Center {
             self.textLabel!.frame = CGRectMake(0, 0, cellContentFrame.width, cellContentFrame.height)
         } else if self.textLabel!.textAlignment == .Left {
