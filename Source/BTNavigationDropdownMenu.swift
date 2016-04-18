@@ -249,7 +249,6 @@ public class BTNavigationDropdownMenu: UIView {
     public var didSelectItemAtIndexHandler: ((indexPath: NSIndexPath) -> ())?
     public var isShown: Bool!
 
-    private weak var navigationController: UINavigationController?
     private var configuration = BTConfiguration()
     private var topSeparator: UIView!
     private var menuButton: UIButton!
@@ -258,6 +257,7 @@ public class BTNavigationDropdownMenu: UIView {
     private var backgroundView: UIView!
     private var tableView: BTTableView!
     private var menuWrapper: UIView!
+    private var navigationBarMaxY: CGFloat = 0
     
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -284,13 +284,6 @@ public class BTNavigationDropdownMenu: UIView {
     }
     
     public init(navigationController: UINavigationController?, title: String, items: [[String]], configuration: BTConfiguration) {
-        // Navigation controller
-        if let navigationController = navigationController {
-            self.navigationController = navigationController
-        } else {
-            self.navigationController = UIApplication.sharedApplication().keyWindow?.rootViewController?.topMostViewController?.navigationController
-        }
-        
         // Get titleSize
         let titleSize = (title as NSString).sizeWithAttributes([NSFontAttributeName:self.configuration.cellTextLabelFont])
        
@@ -299,12 +292,13 @@ public class BTNavigationDropdownMenu: UIView {
         self.items = items
         
         // Set frame
-        let frame = CGRectMake(0, 0, titleSize.width + (self.configuration.arrowPadding + self.configuration.arrowImage.size.width)*2, self.navigationController!.navigationBar.frame.height)
+        let frame = CGRectMake(
+            0, 0,
+            titleSize.width + (self.configuration.arrowPadding + self.configuration.arrowImage.size.width)*2,
+            navigationController!.navigationBar.frame.height)
+        self.navigationBarMaxY = navigationController!.navigationBar.frame.maxY
         
         super.init(frame:frame)
-        
-        self.navigationController?.view.addObserver(self, forKeyPath: "frame", options: .New, context: nil)
-        
         
         // Init properties
         self.configuration = configuration
@@ -331,6 +325,8 @@ public class BTNavigationDropdownMenu: UIView {
         self.menuWrapper = UIView(frame: CGRectMake(menuWrapperBounds.origin.x, 0, menuWrapperBounds.width, menuWrapperBounds.height))
         self.menuWrapper.clipsToBounds = true
         self.menuWrapper.autoresizingMask = UIViewAutoresizing.FlexibleWidth.union(UIViewAutoresizing.FlexibleHeight)
+        
+        self.menuWrapper.frame.origin.y = navigationController!.navigationBar.frame.maxY
         
         // Init background view (under table view)
         self.backgroundView = UIView(frame: menuWrapperBounds)
@@ -366,14 +362,6 @@ public class BTNavigationDropdownMenu: UIView {
         self.menuWrapper.hidden = true
     }
     
-    public override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        if keyPath == "frame" {
-            // Set up DropdownMenu
-            self.menuWrapper.frame.origin.y = self.navigationController!.navigationBar.frame.maxY
-            self.tableView.reloadData()
-        }
-    }
-    
     override public func layoutSubviews() {
         self.menuTitle.sizeToFit()
         self.menuTitle.center = CGPointMake(self.frame.size.width/2, self.frame.size.height/2)
@@ -400,16 +388,8 @@ public class BTNavigationDropdownMenu: UIView {
         }
     }
     
-    func setupDefaultConfiguration() {
-        self.menuTitleColor = self.navigationController?.navigationBar.titleTextAttributes?[NSForegroundColorAttributeName] as? UIColor // Setter
-        self.cellBackgroundColor = self.navigationController?.navigationBar.barTintColor
-        self.cellSeparatorColor = self.navigationController?.navigationBar.titleTextAttributes?[NSForegroundColorAttributeName] as? UIColor
-        self.cellTextLabelColor = self.navigationController?.navigationBar.titleTextAttributes?[NSForegroundColorAttributeName] as? UIColor
-    }
-    
-    
     func showMenu() {
-        self.menuWrapper.frame.origin.y = self.navigationController!.navigationBar.frame.maxY
+        self.menuWrapper.frame.origin.y = self.navigationBarMaxY
         
         self.isShown = true
         
