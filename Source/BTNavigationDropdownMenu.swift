@@ -247,6 +247,15 @@ public class BTNavigationDropdownMenu: UIView {
     }
     
     public var didSelectItemAtIndexHandler: ((indexPath: NSIndexPath) -> ())?
+    public var selectedIndexPath: NSIndexPath {
+        get {
+            return self.tableView.selectedIndexPath
+        }
+        set {
+            self.tableView.selectedIndexPath = newValue
+        }
+    }
+    
     public var isShown: Bool!
 
     private var configuration = BTConfiguration()
@@ -570,7 +579,11 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     }
     
     // Private properties
-    private var selectedIndexPath: NSIndexPath
+    private var selectedIndexPath: NSIndexPath {
+        didSet {
+            self.reloadData()
+        }
+    }
     private var sectionExpansion: [Bool]
     
     required init?(coder aDecoder: NSCoder) {
@@ -665,7 +678,6 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         selectedIndexPath = indexPath
         self.selectRowAtIndexPathHandler!(indexPath: indexPath)
-        self.reloadData()
         let cell = tableView.cellForRowAtIndexPath(indexPath) as? BTTableViewCell
         cell?.contentView.backgroundColor = self.configuration.cellSelectionColor
     }
