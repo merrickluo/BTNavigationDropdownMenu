@@ -237,6 +237,12 @@ public class BTNavigationDropdownMenu: UIView {
     }
     
     public var didSelectItemAtIndexHandler: ((indexPath: NSIndexPath) -> ())?
+    public var selectedItemIndex: Int {
+        get {return tableView.selectedIndexPath.section}
+        set {
+            tableView.selectedIndexPath = NSIndexPath(forRow: 0, inSection: newValue)
+        }
+    }
     public var isShown: Bool!
 
     private var navigationController: UINavigationController?
@@ -548,6 +554,15 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     // Public properties
     var configuration: BTConfiguration
     var selectRowAtIndexPathHandler: ((indexPath: NSIndexPath) -> ())?
+    var selectedIndexPath: NSIndexPath {
+        didSet {
+            if selectedIndexPath.compare(oldValue) != .OrderedSame /*&&
+                selectedIndexPath.row < self.numberOfRowsInSection(selectedIndexPath.section) &&
+                selectedIndexPath.section < self.numberOfSectionsInTableView(self)*/ {
+                reloadRowsAtIndexPaths([oldValue, selectedIndexPath], withRowAnimation: .Automatic)
+            }
+        }
+    }
     
     var items: [[String]] {
         didSet {
@@ -559,7 +574,6 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     }
     
     // Private properties
-    private var selectedIndexPath: NSIndexPath
     private var sectionExpansion: [Bool]
     
     required init?(coder aDecoder: NSCoder) {
@@ -611,12 +625,27 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = BTTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "Cell", configuration: self.configuration)
-        cell.textLabel?.text = self.items[indexPath.section][indexPath.row] as? String
+
+        let identifier = "Cell"
+        var tmpCell: BTTableViewCell? = tableView.dequeueReusableCellWithIdentifier(identifier) as? BTTableViewCell
+        if (tmpCell == nil) {
+            tmpCell = BTTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: identifier, configuration: self.configuration)
+        }
+        let cell = tmpCell!
+        cell.textLabel?.text = self.items[indexPath.section][indexPath.row]
         cell.textLabel?.textColor = selectedIndexPath == indexPath ? self.configuration.cellTextLabelSelectedColor : self.configuration.cellTextLabelColor
         cell.checkmarkIcon.hidden = self.configuration.checkMarkEnabled && (indexPath == selectedIndexPath) ? false : true
         let showExpansion = self.items[indexPath.section].count > 1 && indexPath.row == 0
         cell.expandArrowIcon.hidden = !showExpansion
+        
+        if indexPath.compare(selectedIndexPath) == .OrderedSame {
+            cell.contentView.backgroundColor = self.configuration.cellSelectionColor
+            cell.checkmarkIcon.hidden = false
+        } else {
+            cell.checkmarkIcon.hidden = true
+            cell.contentView.backgroundColor = self.configuration.cellBackgroundColor
+        }
+        
         
         if showExpansion {
             cell.expansionTapAction = { [weak self] in
@@ -641,15 +670,10 @@ class BTTableView: UITableView, UITableViewDelegate, UITableViewDataSource {
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         selectedIndexPath = indexPath
         self.selectRowAtIndexPathHandler!(indexPath: indexPath)
-        self.reloadData()
-        let cell = tableView.cellForRowAtIndexPath(indexPath) as? BTTableViewCell
-        cell?.contentView.backgroundColor = self.configuration.cellSelectionColor
     }
     
     func tableView(tableView: UITableView, didDeselectRowAtIndexPath indexPath: NSIndexPath) {
-        let cell = tableView.cellForRowAtIndexPath(indexPath) as? BTTableViewCell
-        cell?.checkmarkIcon.hidden = true
-        cell?.contentView.backgroundColor = self.configuration.cellBackgroundColor
+        selectedIndexPath = indexPath
     }
 }
 
@@ -724,7 +748,7 @@ class BTTableViewCell: UITableViewCell {
     }
     
     func rotateArrow(arrowView: UIImageView) {
-        UIView.animateWithDuration(0.2, animations: {[weak self] () -> () in
+        UIView.animateWithDuration(0.2, animations: {_ in
             arrowView.transform = CGAffineTransformRotate(arrowView.transform, 180 * CGFloat(M_PI/180))
             })
     }
