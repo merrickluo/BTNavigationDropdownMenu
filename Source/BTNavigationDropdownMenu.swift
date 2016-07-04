@@ -237,10 +237,10 @@ public class BTNavigationDropdownMenu: UIView {
     }
     
     public var didSelectItemAtIndexHandler: ((indexPath: NSIndexPath) -> ())?
-    public var selectedItemIndex: Int {
-        get {return tableView.selectedIndexPath.section}
+    public var selectedItemIndexPath: NSIndexPath {
+        get {return tableView.selectedIndexPath}
         set {
-            tableView.selectedIndexPath = NSIndexPath(forRow: 0, inSection: newValue)
+            tableView.selectedIndexPath = newValue
         }
     }
     public var isShown: Bool!

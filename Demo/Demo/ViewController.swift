@@ -38,7 +38,6 @@ class ViewController: UIViewController {
         }
         
         self.navigationItem.titleView = menuView
-        menuView.selectedItemIndex = 3
     }
 }
 
